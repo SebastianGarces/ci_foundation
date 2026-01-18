@@ -1,4 +1,4 @@
-name: Deploy
+name: Pipeline
 
 on:
     push:
@@ -6,15 +6,85 @@ on:
     workflow_dispatch:
 
 concurrency:
-    group: deploy-main
+    group: pipeline-${{ github.ref }}
     cancel-in-progress: true
 
 permissions:
     contents: read
-    packages: write
 
 jobs:
-    deploy:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: 1.3.6
+
+            - name: Cache Bun
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.bun/install/cache
+                  key: bun-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
+                  restore-keys: |
+                      bun-${{ runner.os }}-
+
+            - name: Install deps
+              run: bun install --frozen-lockfile
+
+            - name: Format check
+              run: bun run format:check
+
+            - name: Test
+              run: bun run test
+
+            - name: Typecheck
+              run: bun run typecheck
+
+            - name: Build
+              run: bun run build
+
+    deploy_staging:
+        needs: build
+        runs-on: ubuntu-latest
+        environment: staging
+        env:
+            FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup flyctl
+              uses: superfly/flyctl-actions/setup-flyctl@master
+
+            - name: Deploy to Staging
+              run: flyctl deploy -c fly.staging.toml --remote-only
+
+    deploy_testing:
+        needs: deploy_staging
+        runs-on: ubuntu-latest
+        environment: testing
+        env:
+            FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup flyctl
+              uses: superfly/flyctl-actions/setup-flyctl@master
+
+            - name: Deploy to Testing
+              run: flyctl deploy -c fly.testing.toml --remote-only
+
+    deploy_production:
+        needs: deploy_testing
         runs-on: ubuntu-latest
         environment: production
         env:
@@ -26,8 +96,6 @@ jobs:
 
             - name: Setup flyctl
               uses: superfly/flyctl-actions/setup-flyctl@master
-            
-            - name: Deploy to Fly
-              env:
-                  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-              run: flyctl deploy --remote-only
+
+            - name: Deploy to Production
+              run: flyctl deploy -c fly.production.toml --remote-only

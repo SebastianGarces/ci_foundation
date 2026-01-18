@@ -1,16 +1,14 @@
-name: CI
+name: PR Checks
 
 on:
     pull_request:
-    push:
-        branches: [main]
 
 concurrency:
-    group: ci-${{ github.ref }}
+    group: pr-${{ github.ref }}
     cancel-in-progress: true
 
 jobs:
-    ci:
+    checks:
         runs-on: ubuntu-latest
 
         steps:
@@ -46,14 +44,8 @@ jobs:
             - name: Build
               run: bun run build
 
-            - name: Upload dist artifact
-              uses: actions/upload-artifact@v4
-              with:
-                  name: dist
-                  path: dist
-
     docker:
-        needs: ci
+        needs: checks
         runs-on: ubuntu-latest
 
         steps:
@@ -78,13 +70,11 @@ jobs:
                   docker run -d --rm --name app -p 3000:3000 ci-foundation:${{ github.sha }}
                   for i in $(seq 1 30); do
                       if curl -fsS http://localhost:3000/health > /dev/null; then
-                          echo "Health check ok"
                           docker stop app
                           exit 0
                       fi
                       sleep 1
                   done
-                  echo "Health check failed"
                   docker logs app || true
                   docker stop app || true
                   exit 1
