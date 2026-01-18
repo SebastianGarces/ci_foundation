@@ -15,7 +15,7 @@ export const server = Bun.serve({
                         age: 30,
                         email: 'john.doe@example.com',
                         address: '123 Main St, Anytown, USA',
-                        phone: '123-456-7891',
+                        phone: '123-456-7890',
                         city: 'Anytown',
                         state: 'CA',
                         zip: '12345',
