@@ -1,17 +1,16 @@
-type Person = {
-    name: string;
-    age: number;
-    email: string;
-};
+const server = Bun.serve({
+    port: 3000,
+    routes: {
+        '/': () => new Response('Hello, world!'),
+        '/health': () =>
+            new Response(JSON.stringify({ status: 'OK' }), {
+                headers: { 'content-type': 'application/json' },
+                status: 200,
+            }),
+    },
+    fetch(req) {
+        return new Response('Not Found', { status: 404 });
+    },
+});
 
-const person: Person = {
-    name: 'John Doe',
-    age: 30,
-    email: 'john.doe@example.com',
-};
-
-function main() {
-    console.log('CI foundations working', person);
-}
-
-main();
+console.log(`Server running on ${server.url}`);

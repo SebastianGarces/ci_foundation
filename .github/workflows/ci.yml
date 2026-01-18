@@ -1,5 +1,9 @@
 name: CI
 
+permissions:
+    contents: read
+    packages: write
+
 on:
     pull_request:
     push:
@@ -10,12 +14,13 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
+    # Purpose of this job is to run the CI pipeline. It checks out the code, installs dependencies, runs tests, checks formatting, builds the project and uploads the dist artifact.
     ci:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+            - name: Checkout #This is the step name, I determine it.
+              uses: actions/checkout@v4 #Actions can be checked on GitHub Actions Marketplace. See each action's documentation for implementation details.
 
             - name: Setup Bun
               uses: oven-sh/setup-bun@v2
