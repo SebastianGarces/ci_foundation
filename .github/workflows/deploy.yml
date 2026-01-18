@@ -45,8 +45,8 @@ jobs:
                   file: ./Dockerfile
                   push: true
                   tags: |
-                      ghcr.io/${{ github.IMAGE_REPO_LC }}:${{ github.sha }}
-                      ghcr.io/${{ github.IMAGE_REPO_LC }}:main
+                      ghcr.io/${{ env.IMAGE_REPO_LC }}:${{ github.sha }}
+                      ghcr.io/${{ env.IMAGE_REPO_LC }}:main
                   cache-from: type=gha
                   cache-to: type=gha,mode=max
 
