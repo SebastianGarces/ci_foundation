@@ -1,4 +1,4 @@
-const server = Bun.serve({
+export const server = Bun.serve({
     port: 3000,
     routes: {
         '/': () => new Response('Hello, world!'),
@@ -7,9 +7,27 @@ const server = Bun.serve({
                 headers: { 'content-type': 'application/json' },
                 status: 200,
             }),
-    },
-    fetch(req) {
-        return new Response('Not Found', { status: 404 });
+        '/api/v1/': {
+            GET: () =>
+                new Response(
+                    JSON.stringify({
+                        name: 'John Doe',
+                        age: 30,
+                        email: 'john.doe@example.com',
+                        address: '123 Main St, Anytown, USA',
+                        phone: '123-456-7890',
+                        city: 'Anytown',
+                        state: 'CA',
+                        zip: '12345',
+                        country: 'USA',
+                    }),
+                    {
+                        headers: { 'content-type': 'application/json' },
+                        status: 200,
+                    },
+                ),
+        },
+        '/*': () => new Response('Not Found', { status: 404 }),
     },
 });
 
